@@ -7,6 +7,8 @@
 class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionProvider, GridField_DataManipulator {
 	protected $sortColumn;
 	protected $append_to_top=false;
+
+	private $relationshipName = null;
 	
 	/**
 	 * @param String $sortColumn Column that should be used to update the sort information
@@ -135,7 +137,7 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 			$query->limit(array());
 			return $query;
 		});
-		
+
 		$many_many = ($list instanceof ManyManyList);
 		if (!$many_many) {
 			$sng=singleton($gridField->getModelClass());
@@ -160,9 +162,16 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 			$i = 1;
 			
 			if ($many_many) {
-				list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
-				$extraFields=$owner->many_many_extraFields($gridField->getName());
-				
+				if (!is_null($this->relationshipName)) {
+					list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($this->relationshipName);
+					$extraFields=$owner->many_many_extraFields($this->relationshipName);
+				} else {
+					list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
+					$extraFields=$owner->many_many_extraFields($gridField->getName());
+				}
+
+
+
 				if(!$extraFields || !array_key_exists($this->sortColumn, $extraFields) || !($extraFields[$this->sortColumn]=='Int' || is_subclass_of('Int', $extraFields[$this->sortColumn]))) {
 					user_error('Sort column '.$this->sortColumn.' must be an Int, column is of type '.$fieldType, E_USER_ERROR);
 					exit;
@@ -329,7 +338,11 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 		
 		
 		if ($many_many) {
-			list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
+			if (!is_null($this->relationshipName)) {
+				list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($this->relationshipName);
+			} else {
+				list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
+			}
 		}else {
 			//Find table containing the sort column
 			$table=false;
@@ -445,7 +458,11 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 		
 		
 		if ($many_many) {
-			list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
+			if (!is_null($this->relationshipName)) {
+				list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($this->relationshipName);
+			} else {
+				list($parentClass, $componentClass, $parentField, $componentField, $table) = $owner->many_many($gridField->getName());
+			}
 		}
 		
 		
@@ -547,5 +564,9 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 			Controller::curr()->onAfterGridFieldPageSort(clone $items);
 		}
 	}
+
+	public function setRelationshipName($relationshipName) {
+		$this->relationshipName = $relationshipName;
+	}
+
 }
-?>
