@@ -397,11 +397,7 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 						. '" SET "' . $sortColumn . '" = ' . (($sort + 1) + $pageOffset)
 						. ' WHERE "ID" = '. $id);
 				
-				// check to see if this data class is versioned so we can update the live table too
-				$versioned = new Versioned();
-				$isVersioned = $versioned->canBeVersioned($baseDataClass);
-
-				if ($isVersioned) {
+				if (Config::inst()->get($baseDataClass, 'versioning')) {
 					DB::query('UPDATE "' . $table
 						. '_Live" SET "' . $sortColumn . '" = ' . (($sort + 1) + $pageOffset)
 						. ' WHERE "ID" = '. $id);
