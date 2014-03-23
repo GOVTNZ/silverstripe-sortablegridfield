@@ -152,8 +152,7 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 				exit;
 			}
 		}
-		
-		
+
 		$max = $list->Max($this->sortColumn);
 		$list=$list->where('"'.$this->sortColumn.'"=0');
 		if($list->Count()>0) {
@@ -382,8 +381,9 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 		if(DB::getConn()->supportsTransactions()) {
 			DB::getConn()->transactionStart();
 		}
-		
-		
+
+
+
 		//Perform sorting
 		$ids = explode(',', $data['ItemIDs']);
 		for($sort = 0;$sort<count($ids);$sort++) {
@@ -397,9 +397,15 @@ class GridFieldSortableRows implements GridField_HTMLProvider, GridField_ActionP
 						. '" SET "' . $sortColumn . '" = ' . (($sort + 1) + $pageOffset)
 						. ' WHERE "ID" = '. $id);
 				
-				DB::query('UPDATE "' . $baseDataClass
-						. '" SET "LastEdited" = \'' . date('Y-m-d H:i:s') . '\''
+				// check to see if this data class is versioned so we can update the live table too
+				$versioned = new Versioned();
+				$isVersioned = $versioned->canBeVersioned($baseDataClass);
+
+				if ($isVersioned) {
+					DB::query('UPDATE "' . $table
+						. '_Live" SET "' . $sortColumn . '" = ' . (($sort + 1) + $pageOffset)
 						. ' WHERE "ID" = '. $id);
+				}
 			}
 		}
 		
